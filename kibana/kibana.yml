@@ -1,0 +1,25 @@
+elasticsearch:
+  hosts:
+    - ${ELASTICSEARCH_HOST}
+  username: ${ELASTICSEARCH_USERNAME}
+  password: ${ELASTICSEARCH_PASSWORD}
+  # ssl:
+    # verificationMode: certificate
+    # alwaysPresentCertificate: true
+    # certificateAuthorities: ["/usr/share/kibana/config/certs/elastic-certificates.crt"]
+    # key: "/usr/share/kibana/config/certs/elastic-stack-ca-nopassword.key"
+    # certificate: "/usr/share/kibana/config/certs/elastic-stack-ca.crt"
+    # keystore:
+    #   path: "/usr/share/kibana/config/certs/elastic-certificates.p12"
+    #   password: "adam"
+    # truststore:
+    #   path: "/usr/share/kibana/config/certs/elastic-certificates.p12"
+    #   password: "adam"
+
+server:
+  port: 5601
+  host: "0.0.0.0"
+  ssl:
+    enabled: false
+  cors:
+    enabled: true

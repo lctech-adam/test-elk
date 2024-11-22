@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
+    container_name: es01
+    environment:
+      - bootstrap.memory_lock=true # 停用 memory page swap
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m" # JVM args
+      - CERT_PASSWORD=${CERT_PASSWORD}
+      - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1 # 最大可鎖定的memory量，-1是無限制
+    volumes:
+      - ./elk/elk_01.yml:/usr/share/elasticsearch/config/elasticsearch.yml 
+      - ./certs:/usr/share/elasticsearch/config/certs
+      - esdata01:/usr/share/elasticsearch/data
+      - ./shell:/shell
+    ports:
+      - "${ELK_PORT}:9200" # for clients (LogStash, Kibana...etc)
+      - "9300:9300" # for connection between cluster nodes
+    networks:
+      - esnet
+    command: >
+      bash -c "echo ${ELK_PASSWORD} | bin/elasticsearch-keystore add bootstrap.password -f && bin/elasticsearch"
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
+    container_name: es02
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - CERT_PASSWORD=${CERT_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elk/elk_02.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./certs:/usr/share/elasticsearch/config/certs
+      - esdata02:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
+  es03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
+    container_name: es03
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - CERT_PASSWORD=${CERT_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./elk/elk_03.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./certs:/usr/share/elasticsearch/config/certs
+      - esdata03:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOST=http://es01:${ELK_PORT}
+      - ELK_ROOT_USERNAME=elastic
+      - ELK_ROOT_PASSWORD=${ELK_PASSWORD}
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
+      - ELK_PORT=${ELK_PORT}
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./shell:/shell
+    ports:
+      - "${KIBANA_PORT}:5601" # 可開啟Kibana GUI
+    networks:
+      - esnet
+    # depends_on:
+    #   es01:
+    #     condition: service_healthy
+    command: /bin/bash -c "/shell/set_kibana.sh && /usr/share/kibana/bin/kibana"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${LOGSTASH_VERSION}
+    container_name: logstash
+    environment:
+      - LOGSTASH_JAVA_OPTS=-Xms128m -Xmx128m
+      - ELASTICSEARCH_HOST=http://es01:${ELK_PORT}
+      - ELK_ROOT_USERNAME=elastic
+      - ELK_ROOT_PASSWORD=${ELK_PASSWORD}
+      - ELASTICSEARCH_USERNAME=logstash_internal
+      - ELASTICSEARCH_PASSWORD=${LOGSTASH_PASSWORD}
+      - ELK_PORT=${ELK_PORT}
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./shell:/shell
+      - ./pv:/persist-storage
+    ports:
+      - "${LOGSTASH_PORT}:5044" # data source input
+      - "9600:9600" # Logstash monitoring
+    networks:
+      - esnet
+    command: /bin/bash -c "/shell/set_logstash.sh && /usr/share/logstash/bin/logstash -f /usr/share/logstash/pipeline/logstash.conf"
+
+  # pubsub-emulator:
+  #   image: google/cloud-sdk:latest
+  #   container_name: pubsub-emulator
+  #   # platform: linux/arm64/v7 # 沒有arm64的，只能用amd64
+  #   command: gcloud beta emulators pubsub start --host-port=0.0.0.0:${PUBSUB_PORT}
+  #   ports:
+  #     - "${PUBSUB_PORT}:${PUBSUB_PORT}"
+  #   environment:
+  #     - PUBSUB_PROJECT_ID=${PUBSUB_PROJECT_ID}
+  #   networks:
+  #     - esnet
+
+volumes:
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+  esdata03:
+    driver: local
+  pv:
+    driver: local
+
+networks:
+  esnet:
+    driver: bridge
