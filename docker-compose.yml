@@ -107,7 +107,7 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./shell:/shell
-      - ./pv:/persist-storage
+      - pv:/persist-storage
     ports:
       - "${LOGSTASH_PORT}:5044" # data source input
       - "9600:9600" # Logstash monitoring
