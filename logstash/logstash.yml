@@ -6,7 +6,7 @@ api:
     host: 127.0.0.1
 
 pipeline:
-  id: pubsub-log
+  id: pubsub-logs
   buffer:
     type: direct # 未來版本(9.x) 才能改成heap
   batch:
@@ -23,6 +23,7 @@ dead_letter_queue:
   storage_policy: drop_older
 
 path:
+  config: /usr/share/logstash/pipeline/pubsub-logs.conf
   dead_letter_queue: "/persist-storage"
 
 # xpack.monitoring已經於7.9.0 deprecated，不用設定

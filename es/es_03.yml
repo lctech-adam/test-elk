@@ -1,0 +1,30 @@
+cluster:
+  name: es-cluster
+  initial_master_nodes: [es01, es02, es03]
+
+node:
+  name: es03
+
+discovery:
+  seed_hosts: [es01, es02]
+
+bootstrap:
+  memory_lock: true
+
+network:
+  host: 0.0.0.0
+
+xpack:
+  security:
+    enabled: true
+    transport:
+      ssl:
+        enabled: true
+        verification_mode: certificate
+        client_authentication: none
+        keystore:
+          path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+          password: ${CERT_PASSWORD}
+        truststore:
+          path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+          password: ${CERT_PASSWORD}

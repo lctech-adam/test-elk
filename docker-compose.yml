@@ -6,41 +6,46 @@ services:
     container_name: es01
     environment:
       - bootstrap.memory_lock=true # 停用 memory page swap
-      - "ES_JAVA_OPTS=-Xms128m -Xmx128m" # JVM args
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m" # JVM args
       - CERT_PASSWORD=${CERT_PASSWORD}
+      - ELK_PASSWORD=${ELK_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
+      - ELK_VERSION=${ELK_VERSION}
     ulimits:
       memlock:
         soft: -1
         hard: -1 # 最大可鎖定的memory量，-1是無限制
     volumes:
-      - ./elk/elk_01.yml:/usr/share/elasticsearch/config/elasticsearch.yml 
+      - ./es/es_01.yml:/usr/share/elasticsearch/config/elasticsearch.yml 
       - ./certs:/usr/share/elasticsearch/config/certs
       - esdata01:/usr/share/elasticsearch/data
       - ./shell:/shell
+      - ./es/plugins/elasticsearch-analysis-ik-${ELK_VERSION}:/usr/share/elasticsearch/plugins/elasticsearch-analysis-ik-${ELK_VERSION} # source: https://release.infinilabs.com/analysis-ik/stable/
     ports:
       - "${ELK_PORT}:9200" # for clients (LogStash, Kibana...etc)
       - "9300:9300" # for connection between cluster nodes
     networks:
       - esnet
-    command: >
-      bash -c "echo ${ELK_PASSWORD} | bin/elasticsearch-keystore add bootstrap.password -f && bin/elasticsearch"
+    command: /bin/bash -c "/shell/init_ik.sh && /shell/init_es.sh"
 
   es02:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     container_name: es02
     environment:
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
       - CERT_PASSWORD=${CERT_PASSWORD}
+      - ELK_VERSION=${ELK_VERSION}
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - ./elk/elk_02.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./es/es_02.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./certs:/usr/share/elasticsearch/config/certs
       - esdata02:/usr/share/elasticsearch/data
+      - ./shell:/shell
+      - ./es/plugins/elasticsearch-analysis-ik-${ELK_VERSION}:/usr/share/elasticsearch/plugins/elasticsearch-analysis-ik-${ELK_VERSION}
     networks:
       - esnet
 
@@ -49,16 +54,19 @@ services:
     container_name: es03
     environment:
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
       - CERT_PASSWORD=${CERT_PASSWORD}
+      - ELK_VERSION=${ELK_VERSION}
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - ./elk/elk_03.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./es/es_03.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./certs:/usr/share/elasticsearch/config/certs
       - esdata03:/usr/share/elasticsearch/data
+      - ./shell:/shell
+      - ./es/plugins/elasticsearch-analysis-ik-${ELK_VERSION}:/usr/share/elasticsearch/plugins/elasticsearch-analysis-ik-${ELK_VERSION}
     networks:
       - esnet
 
@@ -105,7 +113,7 @@ services:
       - "9600:9600" # Logstash monitoring
     networks:
       - esnet
-    command: /bin/bash -c "/shell/set_logstash.sh && /usr/share/logstash/bin/logstash -f /usr/share/logstash/pipeline/logstash.conf"
+    command: /bin/bash -c "/shell/set_logstash.sh && /usr/share/logstash/bin/logstash"
 
   # pubsub-emulator:
   #   image: google/cloud-sdk:latest
