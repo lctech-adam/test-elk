@@ -8,7 +8,7 @@ services:
       - bootstrap.memory_lock=true # 停用 memory page swap
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m" # JVM args
       - CERT_PASSWORD=${CERT_PASSWORD}
-      - ELK_PASSWORD=${ELK_PASSWORD}
+      - ES_PASSWORD=${ES_PASSWORD}
       - KIBANA_PASSWORD=${KIBANA_PASSWORD}
       - ELK_VERSION=${ELK_VERSION}
     ulimits:
@@ -22,7 +22,7 @@ services:
       - ./shell:/shell
       - ./es/plugins/elasticsearch-analysis-ik-${ELK_VERSION}:/usr/share/elasticsearch/plugins/elasticsearch-analysis-ik-${ELK_VERSION} # source: https://release.infinilabs.com/analysis-ik/stable/
     ports:
-      - "${ELK_PORT}:9200" # for clients (LogStash, Kibana...etc)
+      - "${ES_PORT}:9200" # for clients (LogStash, Kibana...etc)
       - "9300:9300" # for connection between cluster nodes
     networks:
       - esnet
@@ -71,15 +71,15 @@ services:
       - esnet
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:${KIBANA_VERSION}
+    image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
     container_name: kibana
     environment:
-      - ELASTICSEARCH_HOST=http://es01:${ELK_PORT}
-      - ELK_ROOT_USERNAME=elastic
-      - ELK_ROOT_PASSWORD=${ELK_PASSWORD}
-      - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-      - ELK_PORT=${ELK_PORT}
+      - ES_HOST=http://es01:${ES_PORT}
+      - ES_ROOT_USERNAME=elastic
+      - ES_ROOT_PASSWORD=${ES_PASSWORD}
+      - ES_USERNAME=kibana_system
+      - ES_PASSWORD=${KIBANA_PASSWORD}
+      - ES_PORT=${ES_PORT}
     volumes:
       - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
       - ./shell:/shell
@@ -93,16 +93,16 @@ services:
     command: /bin/bash -c "/shell/set_kibana.sh && /usr/share/kibana/bin/kibana"
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:${LOGSTASH_VERSION}
+    image: docker.elastic.co/logstash/logstash:${ELK_VERSION}
     container_name: logstash
     environment:
       - LOGSTASH_JAVA_OPTS=-Xms128m -Xmx128m
-      - ELASTICSEARCH_HOST=http://es01:${ELK_PORT}
-      - ELK_ROOT_USERNAME=elastic
-      - ELK_ROOT_PASSWORD=${ELK_PASSWORD}
-      - ELASTICSEARCH_USERNAME=logstash_internal
-      - ELASTICSEARCH_PASSWORD=${LOGSTASH_PASSWORD}
-      - ELK_PORT=${ELK_PORT}
+      - ES_HOST=http://es01:${ES_PORT}
+      - ES_ROOT_USERNAME=elastic
+      - ES_ROOT_PASSWORD=${ES_PASSWORD}
+      - ES_USERNAME=logstash_internal
+      - ES_PASSWORD=${LOGSTASH_PASSWORD}
+      - ES_PORT=${ES_PORT}
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml

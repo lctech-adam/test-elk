@@ -1,13 +1,16 @@
 #!/bin/bash
 
-until curl -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" -s "${ELASTICSEARCH_HOST}" > /dev/null; do
+AUTH="${ES_ROOT_USERNAME}:${ES_ROOT_PASSWORD}"
+HEADER="Content-Type: application/json"
+
+until curl -u $AUTH -s "${ES_HOST}" > /dev/null; do
   echo "Waiting for Elasticsearch to be available..."
   sleep 5
 done
 
 # 創建權限
-curl -X POST -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOST}/_security/role/logstash_writer" \
-  -H 'Content-Type: application/json' \
+curl -X POST "${ES_HOST}/_security/role/logstash_writer" \
+  -u "$AUTH" -H "$HEADER" \
   -d'
 {
   "cluster": ["manage_index_templates", "monitor", "manage_ilm"], 
@@ -23,12 +26,11 @@ curl -X POST -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOS
   ]
 }'
 
-echo -e "\n\n indice created at host:${ELASTICSEARCH_HOST}!!! \n\n"
+echo -e "\n\n indice created at host:${ES_HOST}!!! \n\n"
 
 # 創建index模板
-curl -X PUT "${ELASTICSEARCH_HOST}/_index_template/pubsub-logs-template" \
-  -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" \
-  -H 'Content-Type: application/json' \
+curl -X PUT "${ES_HOST}/_index_template/pubsub-logs-template" \
+  -u "$AUTH" -H "$HEADER" \
   -d'
 {
   "index_patterns": ["pubsub-logs*"],
@@ -55,10 +57,12 @@ curl -X PUT "${ELASTICSEARCH_HOST}/_index_template/pubsub-logs-template" \
   }
 }'
 
-echo -e "\n\n logs_template created at host:${ELASTICSEARCH_HOST}!!! \n\n"
+echo -e "\n\n logs_template created at host:${ES_HOST}!!! \n\n"
 
 # 創建ILM規則
-curl -X PUT -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOST}/_ilm/policy/pubsub-logs-lifecycle-policy" -H 'Content-Type: application/json' -d'
+curl -X PUT "${ES_HOST}/_ilm/policy/pubsub-logs-lifecycle-policy" \
+     -u "$AUTH" -H "$HEADER" \
+     -d'
 {
   "policy": {
     "phases": {
@@ -74,21 +78,22 @@ curl -X PUT -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOST
   }
 }'
 
-echo -e "\n\n ilm policy created at host:${ELASTICSEARCH_HOST}!!! \n\n"
+echo -e "\n\n ilm policy created at host:${ES_HOST}!!! \n\n"
 
 # 創建data stream
-curl -X PUT -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOST}/_data_stream/pubsub-logs" -H 'Content-Type: application/json'
+curl -X PUT "${ES_HOST}/_data_stream/pubsub-logs" \
+    -u "$AUTH" -H "$HEADER"
 
-echo -e "\n\n data_stream created at host:${ELASTICSEARCH_HOST}!!! \n\n"
+echo -e "\n\n data_stream created at host:${ES_HOST}!!! \n\n"
 
 # 創建ElasticSearch用戶 for LogStash
-curl -X POST -u "${ELK_ROOT_USERNAME}:${ELK_ROOT_PASSWORD}" "${ELASTICSEARCH_HOST}/_security/user/${ELASTICSEARCH_USERNAME}" \
-  -H 'Content-Type: application/json' \
+curl -X POST "${ES_HOST}/_security/user/${ES_USERNAME}" \
+  -u "$AUTH" -H "$HEADER" \
   -d"
 {
-  \"password\" : \"${ELASTICSEARCH_PASSWORD}\",
+  \"password\" : \"${ES_PASSWORD}\",
   \"roles\" : [ \"logstash_writer\"],
   \"full_name\" : \"Internal Logstash User\"
 }"
 
-echo -e "\n\n user:${ELASTICSEARCH_USERNAME} with password:${ELASTICSEARCH_PASSWORD} created!!! \n\n"
+echo -e "\n\n user:${ES_USERNAME} with password:${ES_PASSWORD} created at ${ES_HOST}!!! \n\n"

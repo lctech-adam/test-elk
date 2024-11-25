@@ -1,8 +1,8 @@
 elasticsearch:
   hosts:
-    - ${ELASTICSEARCH_HOST}
-  username: ${ELASTICSEARCH_USERNAME}
-  password: ${ELASTICSEARCH_PASSWORD}
+    - ${ES_HOST}
+  username: ${ES_USERNAME}
+  password: ${ES_PASSWORD}
   # ssl:
     # verificationMode: certificate
     # alwaysPresentCertificate: true
