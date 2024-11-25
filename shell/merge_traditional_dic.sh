@@ -8,7 +8,7 @@ else
 fi
 
 if [ -z "$ELK_VERSION" ]; then
-    echo "ELK_VERSION environment variable is not set."
+    echo "ELK_VERSION env var is not set."
     exit 1
 fi
 
