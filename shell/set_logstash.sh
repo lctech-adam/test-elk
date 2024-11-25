@@ -40,7 +40,8 @@ curl -X PUT "${ELASTICSEARCH_HOST}/_index_template/pubsub-logs-template" \
           "type": "keyword"
         },
         "text": {
-          "type": "text"
+          "type": "text",
+          "analyzer": "ik_max_word"
         },
         "createdAt": {
           "type": "date"
