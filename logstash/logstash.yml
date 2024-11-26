@@ -24,6 +24,6 @@ dead_letter_queue:
 
 path:
   config: /usr/share/logstash/pipeline/pubsub-logs.conf
-  dead_letter_queue: "/persist-storage"
+  dead_letter_queue: "/dlq-storage"
 
 # xpack.monitoring已經於7.9.0 deprecated，不用設定

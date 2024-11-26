@@ -107,7 +107,7 @@ services:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./shell:/shell
-      - pv:/persist-storage
+      - ./log-data:/dlq-storage
     ports:
       - "${LOGSTASH_PORT}:5044" # data source input
       - "9600:9600" # Logstash monitoring
@@ -133,8 +133,6 @@ volumes:
   esdata02:
     driver: local
   esdata03:
-    driver: local
-  pv:
     driver: local
 
 networks:
