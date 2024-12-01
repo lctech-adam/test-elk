@@ -62,6 +62,11 @@ GET /users/_search
                     "weight": 10
                 }
             ],
+            "sort": [ // 可指定多個sort fields (e.g. order by field1, field2, field3)
+                {
+                    "createdAt": "desc"
+                }
+            ],
             "boost_mode": "multiply"
         }
     }
@@ -110,5 +115,27 @@ GET /users/_search
                 }
             ]
         }
+    }
+}
+
+// sort + highlight (from = 起始位置，默認0)
+POST /products/_search
+{
+    "query": {
+        "match_all": {}
+    },
+    "highlight": {
+        "fields": {
+            "name": {
+                "pre_tags": "<em>",
+                "post_tags": "</em>",
+                "require_field_match": "false"
+            }
+        }
+    },
+    "from": 0,
+    "size": 3,
+    "sort": {
+        "createdAt": "desc"
     }
 }
