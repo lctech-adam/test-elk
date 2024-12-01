@@ -139,3 +139,61 @@ POST /products/_search
         "createdAt": "desc"
     }
 }
+
+// aggregation (size=0會取消doc的回傳，hits會是空的。aggs裡面的size可以控制聚合的回傳數量)
+GET /products/_search
+{
+    "query": {
+        "range": {
+          "price": {
+            "gte": 1000,
+            "lte": 5000
+          }
+        }
+    },
+    "size": 0,
+    "aggs": {
+      "priceAggregate": {
+        "terms": {
+            "field": "price",
+            "size": 20,
+            "order": {
+                "_count": "asc"
+            }
+        }
+      }
+    }
+}
+
+// nested aggregation範例，stats (stands for statistic) 會一次性計算出count, avg, min, max, sum
+// 下方範例依照scoreStats aggregate出來的max值進行降序
+GET /products/_search
+{
+    "query": {
+        "range": {
+          "price": {
+            "gte": 1000,
+            "lte": 5000
+          }
+        }
+    },
+    "size": 0,
+    "aggs": {
+      "priceAggregate": {
+        "terms": {
+            "field": "price",
+            "size": 20,
+            "order": {
+                "scoreStats.max": "desc"
+            }
+        },
+        "aggs": {
+            "scoreStats": {
+                "stats": {
+                    "field": "score"
+                }
+            }
+        }
+      }
+    }
+}

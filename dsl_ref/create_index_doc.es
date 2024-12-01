@@ -41,7 +41,8 @@ PUT /users
             },
             "all": {
                 "type": "text",
-                "analyzer": "ik_max_word"
+                "analyzer": "ik_max_word",
+                "search_analyzer": "ik_max_word"
             }
         }
     }
@@ -65,4 +66,44 @@ POST /_analyze
     "analyzer": "ik_smart"
 }
 
-
+// 根據分詞需求再設定char_filter, tokenizer, filter
+PUT /products
+{
+    "settings": {
+        "analysis": {
+            "char_filter": {},
+            "tokenizer": {},
+            "filter": {},
+            "analyzer": {
+                "talk_analyzer": {
+                    "tokenizer": "ik_max_word"
+                }
+            }
+        }
+    },
+    "mappings": {
+        "properties": {
+            "id": {
+                "type": "keyword",
+                "index": true
+            },
+            "name": {
+                "type": "text",
+                "analyzer": "ik_max_word",
+                "search_analyzer": "ik_max_word"
+            },
+            "price": {
+                "type": "integer",
+                "index": true
+            },
+            "score": {
+                "type": "integer",
+                "index": true
+            },
+            "createdAt": {
+                "type": "date",
+                "index": true
+            }
+        }
+    }
+}
