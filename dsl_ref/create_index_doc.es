@@ -67,6 +67,7 @@ POST /_analyze
 }
 
 // 根據分詞需求再設定char_filter, tokenizer, filter
+// 指定sharding和replica
 PUT /products
 {
     "settings": {
@@ -79,7 +80,9 @@ PUT /products
                     "tokenizer": "ik_max_word"
                 }
             }
-        }
+        },
+        "number_of_shards": 2,
+        "number_of_replicas": 1
     },
     "mappings": {
         "properties": {

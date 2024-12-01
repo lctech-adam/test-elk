@@ -197,3 +197,12 @@ GET /products/_search
       }
     }
 }
+
+// 設定explain可以知道查到的每個doc分別是位於哪個node上的shard
+GET /products/_search
+{
+  "explain": true,
+  "query": {
+    "match_all": {}
+  }
+}
