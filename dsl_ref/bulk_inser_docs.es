@@ -27,3 +27,13 @@ POST /products/_bulk
     "score": 2,
     "createdAt": "2015-01-04T12:10:30Z"
 }
+
+// bulk處理多個index時，可以在metadata裡面指定index
+POST /_bulk
+{ "create": { "_index": "products", "_id": "5" } }
+{
+    "name": "iPhone 14 pro",
+    "price": 8000,
+    "score": 3.5,
+    "createdAt": "2021-01-04T12:10:30Z"
+}

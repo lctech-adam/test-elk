@@ -59,13 +59,6 @@ POST /users/_doc/1
     }
 }
 
-// 測試分詞器效果
-POST /_analyze
-{
-    "text": "測試一下ik的分詞功能如何",
-    "analyzer": "ik_smart"
-}
-
 // 根據分詞需求再設定char_filter, tokenizer, filter
 // 指定sharding和replica
 PUT /products
