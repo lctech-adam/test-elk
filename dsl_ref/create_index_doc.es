@@ -103,3 +103,188 @@ PUT /products
         }
     }
 }
+
+PUT /reviews
+{
+    "settings": {
+        "index.mapping.coerce": false
+    },
+    "mappings": {
+        "numeric_detection": true,
+        "date_detection": true,
+        "dynamic_date_formats": ["dd-MM-yyyy"],
+        "properties": {
+            "rating": {
+                "type": "float"
+            },
+            "content": {
+                "type": "text"
+            },
+            "product_id": {
+                "type": "integer"
+            },
+            "author": {
+                "type": "object",
+                "properties": {
+                    "first_name": {
+                        "type": "text"
+                    },
+                    "last_name": {
+                        "type": "text"
+                    },
+                    "email": {
+                        "type": "keyword"
+                    }
+                }
+            }
+        }
+    }
+}
+
+PUT /reviews/_mapping
+{
+    "properties": {
+        "created_at": {
+            "type": "date",
+            "format": "dd/MM/YYYY",
+            "doc_value": false,
+            "norms": false,
+            "index": false
+        },
+        "first_name": {
+            "type": "text",
+            "copy_to": "full_name"
+        },
+        "last_name": {
+            "type": "text",
+            "copy_to": "full_name"
+        },
+        "full_name": {
+            "type": "text"
+        }
+    }
+}
+
+POST /_reindex
+{
+    "source": {
+        "index": "reviews"
+    },
+    "dest": {
+        "index": "reviews_new"
+    }
+}
+
+POST /_reindex
+{
+    "source": {
+        "index": "reviews",
+        "_source": [ "content", "created_at", "rating" ]
+    },
+    "dest": {
+        "index": "reviews_new"
+    }
+}
+
+POST /_reindex
+{
+    "source": {
+        "index": "reviews",
+        "_source": [ "content", "created_at", "rating" ]
+    },
+    "dest": {
+        "index": "reviews_new"
+    },
+    "script": {
+        "source": """
+            ctx._source.comment = ctx._source.remove("content");
+        """
+    }
+}
+
+PUT /multi_field_test
+{
+    "mappings": {
+        "dynamic": false,
+        "properties": {
+            "description": {
+                "type": "text"
+            },
+            "ingredients": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                    }
+                }
+            }
+        }
+    }
+}
+
+// define multi mapping on certain field
+POST /multi_field_test/_doc
+{
+    "description": "To make this spaghetti carbonara, you first need to...",
+    "ingredients": ["Spaghetti", "Bacon", "Eggs"]
+}
+
+// full text
+GET /multi_field_test/_search
+{
+    "query": {
+        "match": {
+            "ingredients": "bACoN"
+        }
+    }
+}
+
+// exact
+GET /multi_field_test/_search
+{
+    "query": {
+        "term": {
+            "ingredients.keyword": "Bacon"
+        }
+    }
+}
+
+PUT /dynamic_template_test
+{
+    "mappings": {
+        "date_detection": true,
+        "dynamic_templates": [
+            {
+                "integers": {
+                    "match_mapping_type": "long",
+                    "mapping": {
+                        "type": "integer"
+                    }
+                }
+            },
+            {
+                "strings": {
+                    "match_mapping_type": "string",
+                    "match": "text_*",
+                    "unmatch": "*_keyword",
+                    "mapping": {
+                        "type": "text",
+                        "fields": {
+                            "keyword": {
+                                "type": "keyword",
+                                "ignore_above": 512
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
+
+POST /dynamic_template_test/_doc
+{
+    "in_stock": 123,
+    "name": "Adam"
+}
