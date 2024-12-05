@@ -16,7 +16,7 @@ services:
         soft: -1
         hard: -1 # 最大可鎖定的memory量，-1是無限制
     volumes:
-      - ./es/es_01.yml:/usr/share/elasticsearch/config/elasticsearch.yml 
+      - ./es/es_01.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ./certs:/usr/share/elasticsearch/config/certs
       - esdata01:/usr/share/elasticsearch/data
       - ./shell:/shell
@@ -113,8 +113,7 @@ services:
       - "9600:9600" # Logstash monitoring
     networks:
       - esnet
-    command: /bin/bash -c "/shell/set_logstash.sh && /usr/share/logstash/bin/logstash"
-
+    command: /bin/bash -c "/shell/set_logstash.sh && /usr/share/logstash/bin/logstash --config.reload.automatic"
   # pubsub-emulator:
   #   image: google/cloud-sdk:latest
   #   container_name: pubsub-emulator
